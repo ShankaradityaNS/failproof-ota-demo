@@ -1,0 +1,33 @@
+{
+  "organization": "Hooper Detector",
+  "policy_group": "ota-edge-protection",
+  "version": "2.0.0",
+  "_comment": "Device authorization policy for the SIMULATED OTA demo. Read by hop_detector.py and by failproof/device-hop-policies.mjs. This is not a native Failproof AI config file.",
+  "sandboxes": {
+    "sandbox-a": { "ip": "10.5.0.10", "role": "OTA staging sandbox (receives firmware)" },
+    "sandbox-b": { "ip": "10.5.0.99", "role": "Trusted device (Primary-Core-Database-Controller)" }
+  },
+  "device_authorization": {
+    "default_decision": "DENY",
+    "grants": [
+      {
+        "source": "sandbox-a",
+        "destination": "sandbox-a",
+        "operations": ["read_sensor", "verify_signature", "write_config"]
+      }
+    ]
+  },
+  "rules": [
+    {
+      "id": "block-trusted-device-jumping",
+      "condition": "destination_sandbox != source_sandbox and no grant covers (source, destination, operation)",
+      "action": "BLOCK",
+      "severity": "CRITICAL",
+      "inject_context": {
+        "error_code": "ERR_HOOPER_LATERAL_JUMP_DETECTED",
+        "message": "CRITICAL BREACH: Unauthorized lateral jump to Trusted Agent caught by Hooper Detector.",
+        "quarantine": true
+      }
+    }
+  ]
+}
